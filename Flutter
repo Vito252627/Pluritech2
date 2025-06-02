@@ -1,0 +1,219 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(MyApp());
+}
+
+class MyApp extends StatelessWidget { // Corrigido nome da classe principal
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Gerenciador de Pets',
+      debugShowCheckedModeBanner: false,
+      home: MenuScreen(),
+    );
+  }
+}
+
+class RegPet {
+  String nomeTut;
+  String cont;
+  String esp;
+  String rac;
+  DateTime dataEnt;
+  DateTime dataS;
+
+  RegPet({
+    required this.nomeTut,
+    required this.cont,
+    required this.esp,
+    required this.rac,
+    required this.dataEnt,
+    required this.dataS,
+  });
+
+  int get diarTot => dataS.difference(dataEnt).inDays;
+  int get diarAtHoj => DateTime.now().difference(dataEnt).inDays;
+}
+
+class MenuScreen extends StatefulWidget {
+  @override
+  _MenuScreenState createState() => _MenuScreenState();
+}
+
+class _MenuScreenState extends State<MenuScreen> {
+  List<RegPet> registros = [
+    RegPet(
+      nomeTut: "Arthur",
+      cont: "0000000",
+      esp: "Cachorro",
+      rac: "Bulldog",
+      dataEnt: DateTime(2025, 5, 12),
+      dataS: DateTime(2025, 5, 30),
+    ),
+  ];
+
+  void _mostForm({RegPet? reg, int? ind}) {
+    final nomCtrl = TextEditingController(text: reg?.nomeTut ?? '');
+    final contCtrl = TextEditingController(text: reg?.cont ?? '');
+    final espCtrl = TextEditingController(text: reg?.esp ?? '');
+    final racCtrl = TextEditingController(text: reg?.rac ?? '');
+    final dateEntCtrl = TextEditingController(
+        text: reg != null
+            ? "${reg.dataEnt.year}-${reg.dataEnt.month.toString().padLeft(2, '0')}-${reg.dataEnt.day.toString().padLeft(2, '0')}"
+            : '');
+    final dataSCtrl = TextEditingController(
+        text: reg != null
+            ? "${reg.dataS.year}-${reg.dataS.month.toString().padLeft(2, '0')}-${reg.dataS.day.toString().padLeft(2, '0')}"
+            : '');
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(reg == null ? 'Registro Novo' : 'Edição de Registro'),
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              TextField(controller: nomCtrl, decoration: InputDecoration(labelText: 'Nome do Tutor')),
+              TextField(controller: contCtrl, decoration: InputDecoration(labelText: 'Contato')),
+              TextField(controller: espCtrl, decoration: InputDecoration(labelText: 'Espécie')),
+              TextField(controller: racCtrl, decoration: InputDecoration(labelText: 'Raça')),
+              TextField(controller: dateEntCtrl, decoration: InputDecoration(labelText: 'Data de Entrada (AAAA-MM-DD)')),
+              TextField(controller: dataSCtrl, decoration: InputDecoration(labelText: 'Data de Saída (AAAA-MM-DD)')),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancelar'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              DateTime? ent = DateTime.tryParse(dateEntCtrl.text);
+              DateTime? sai = DateTime.tryParse(dataSCtrl.text);
+
+              if (ent == null || sai == null || ent.isAfter(sai)) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Datas inválidas!')),
+                );
+                return;
+              }
+
+              final novo = RegPet(
+                nomeTut: nomCtrl.text,
+                cont: contCtrl.text,
+                esp: espCtrl.text,
+                rac: racCtrl.text,
+                dataEnt: ent,
+                dataS: sai,
+              );
+
+              setState(() {
+                if (ind == null) {
+                  registros.add(novo);
+                } else {
+                  registros[ind] = novo;
+                }
+              });
+
+              Navigator.pop(context);
+            },
+            child: Text('Salvar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _vRegistro(RegPet reg) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('Detalhes do Registro'),
+        content: Text('''
+Tutor: ${reg.nomeTut}
+Contato: ${reg.cont}
+Espécie: ${reg.esp}
+Raça: ${reg.rac}
+Entrada: ${reg.dataEnt.day}/${reg.dataEnt.month}/${reg.dataEnt.year}
+Saída: ${reg.dataS.day}/${reg.dataS.month}/${reg.dataS.year}
+Diárias até hoje: ${reg.diarAtHoj}
+Diárias totais: ${reg.diarTot}
+'''),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Fechar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _exRegistro(int ind) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text('Apagar Registro'),
+        content: Text('Deseja realmente apagar este registro?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                registros.removeAt(ind);
+              });
+              Navigator.pop(context);
+            },
+            child: Text('Apagar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Registros de Pets'),
+      ),
+      body: ListView.builder(
+        itemCount: registros.length,
+        itemBuilder: (context, ind) {
+          final r = registros[ind];
+          return ListTile(
+            title: Text(r.nomeTut),
+            subtitle: Text('${r.esp} - ${r.rac}'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.visibility),
+                  onPressed: () => _vRegistro(r),
+                ),
+                IconButton(
+                  icon: Icon(Icons.edit),
+                  onPressed: () => _mostForm(reg: r, ind: ind),
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete),
+                  onPressed: () => _exRegistro(ind),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _mostForm(),
+        child: Icon(Icons.add),
+      ),
+    );
+  }
+}
+
