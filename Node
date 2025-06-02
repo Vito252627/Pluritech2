@@ -1,0 +1,166 @@
+const readline = require('readline');
+const rln = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+let regs = [
+  {
+    nomeTutor: 'Arthur',
+    contTutor: '0000-0000',
+    especie: 'Cachorro',
+    raca: 'Bulldog',
+    dataEnt: new Date('2025-05-20'),
+    dataSai: new Date('2025-05-31'),
+  }
+];
+
+regs.forEach(reg => {
+  const hoje = new Date();
+  reg.diariasMom = Math.floor((hoje - reg.dataEnt) / (1000 * 60 * 60 * 24));
+  reg.diariasTot = Math.floor((reg.dataSai - reg.dataEnt) / (1000 * 60 * 60 * 24));
+});
+
+function exMenu() {
+  console.log(`
+===== MENU =====
+1. Incluir Registro
+2. Visualizar Registros
+3. Editar Registro
+4. Excluir Registro
+5. Sair
+`);
+  rln.question('Escolha: ', (opcao) => {
+    switch (opcao) {
+      case '1':
+        inReg();
+        break;
+      case '2':
+        viReg();
+        break;
+      case '3':
+        edReg();
+        break;
+      case '4':
+        exReg();
+        break;
+      case '5':
+        console.log('Saída');
+        rln.close();
+        break;
+      default:
+        console.log('Opção inválida');
+        exMenu();
+    }
+  });
+}
+
+function inReg() {
+  rln.question('Digite o nome do tutor: ', (nomeTutor) => {
+    rln.question('Digite o contato do tutor: ', (contTutor) => {
+      rln.question('Digite a espécie: ', (especie) => {
+        rln.question('Digite a raça: ', (raca) => {
+          rln.question('Digite a data de entrada (AAAA-MM-DD): ', (dataEntStr) => {
+            rln.question('Digite a previsão da data de saída (AAAA-MM-DD): ', (dataSaiStr) => {
+              const dataEnt = new Date(dataEntStr);
+              const dataSai = new Date(dataSaiStr);
+              const hoje = new Date();
+
+              const diariasMom = Math.floor((hoje - dataEnt) / (1000 * 60 * 60 * 24));
+              const diariasTot = Math.floor((dataSai - dataEnt) / (1000 * 60 * 60 * 24));
+
+              const novoReg = {
+                nomeTutor,
+                contTutor,
+                especie,
+                raca,
+                dataEnt,
+                diariasMom,
+                dataSai,
+                diariasTot,
+              };
+
+              regs.push(novoReg);
+              console.log('Registro incluído');
+              exMenu();
+            });
+          });
+        });
+      });
+    });
+  });
+}
+
+function viReg() {
+  console.log('\n=== INFORMAÇÕES ===');
+  if (regs.length === 0) {
+    console.log('Nenhum registro localizado.');
+  } else {
+    regs.forEach((reg) => {
+      console.log(`
+Nome do Tutor: ${reg.nomeTutor}
+Contato do Tutor: ${reg.contTutor}
+Espécie: ${reg.especie}
+Raça: ${reg.raca}
+Data de Entrada: ${reg.dataEnt.toLocaleDateString()}
+Diárias até o momento: ${reg.diariasMom}
+Previsão de data de saída: ${reg.dataSai.toLocaleDateString()}
+Diárias totais previstas: ${reg.diariasTot}
+      `);
+    });
+  }
+  exMenu();
+}
+
+function edReg() {
+  rln.question('Digite o nome do tutor do registro que deseja editar: ', (nome) => {
+    const reg = regs.find(r => r.nomeTutor === nome);
+    if (!reg) {
+      console.log('Registro não localizado.');
+      exMenu();
+    } else {
+      rln.question('Digite o novo nome do tutor: ', (novoNomeTutor) => {
+        rln.question('Digite o novo contato do tutor: ', (novoCont) => {
+          rln.question('Digite a nova espécie: ', (novaEspecie) => {
+            rln.question('Digite a nova raça: ', (novaRaca) => {
+              rln.question('Digite a nova data de entrada (AAAA-MM-DD): ', (novaDataEntStr) => {
+                rln.question('Digite a nova previsão de data de saída (AAAA-MM-DD): ', (novaDataSaiStr) => {
+                  const novaDataEnt = new Date(novaDataEntStr);
+                  const novaDataSai = new Date(novaDataSaiStr);
+                  const hoje = new Date();
+
+                  reg.nomeTutor = novoNomeTutor;
+                  reg.contTutor = novoCont;
+                  reg.especie = novaEspecie;
+                  reg.raca = novaRaca;
+                  reg.dataEnt = novaDataEnt;
+                  reg.dataSai = novaDataSai;
+                  reg.diariasMom = Math.floor((hoje - novaDataEnt) / (1000 * 60 * 60 * 24));
+                  reg.diariasTot = Math.floor((novaDataSai - novaDataEnt) / (1000 * 60 * 60 * 24));
+
+                  console.log('Registro atualizado');
+                  exMenu();
+                });
+              });
+            });
+          });
+        });
+      });
+    }
+  });
+}
+
+function exReg() {
+  rln.question('Digite o nome do tutor do registro que deseja excluir: ', (nomeTutor) => {
+    const index = regs.findIndex(r => r.nomeTutor === nomeTutor);
+    if (index !== -1) {
+      regs.splice(index, 1);
+      console.log('Registro excluído');
+    } else {
+      console.log('Registro não localizado.');
+    }
+    exMenu();
+  });
+}
+
+exMenu();
